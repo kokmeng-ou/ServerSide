@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHAT APP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+</head>
+<style>
+    ul {
+        list-style-type: none;
+    }
+</style>
+<body v-cloak>
+<div id="app">
+    <div v-if="state == 0">
+        <h3>Welcome Please Enter your username</h3>
+        <form action="" @submit.prevent="handUsername">
+            <input type="text" name="username" id="username" placeholder="username" v-model="username">
+            <button type="button" class="btn btn-primary">Button</button>
+        </form>
+    </div>
+    <div v-else-if="state == 1">
+        <div v-for="ChatMessage in messages" :key="ChatMessage" class="d-flex flex-row">
+            <div class="p-2 flex-grow-1">{{ ChatMessage.text }}</div>
+            <div class="p-2 ">{{ ChatMessage.time}}</div>
+        </div>
+        <form action="" @submit.prevent="sendMessage">
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="message" v-model="message">
+                <button type="submit">send</button>
+            </div>
+        </form>
+    </div>
+    <div>
+        <form action="" @submit.prevent="handleRoomURL">
+            <div class="mb-3">
+              <label for="room" class="form-label"></label>
+              <input type="text" class="form-control" name="room" id="room" rows="3" placeholder="input room" v-model="room"></input>
+              <button type="button" class="btn btn-dark">Create Room</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const { createApp } = Vue
+var socket = null
+createApp({
+    data() {
+        return {
+            state: 0,
+            username: '',
+            message: '',
+            messages: [],
+            room: ''
+        }
+    },
+    created: function () {
+        socket = io()
+    },
+    methods: {
+        async handUsername () {
+            socket.emit('join', this.username)
+            this.username = ''
+            this.state = 1
+        },
+        async sendMessage() {
+            console.log(this.message)
+            socket.emit('message', this.message);
+            this.message = ''
+            
+        },
+        async handleRoomURL () {
+            window.location.assign(`/${this.room}`)
+        }
+
+    },    
+    mounted() {
+        socket.on('message', (msg) => {
+            this.messages.push({ id: msg.id, text: msg.text , time: msg.time });
+        });
+    },
+}).mount('#app')
+</script>
+</body>
+</html>
